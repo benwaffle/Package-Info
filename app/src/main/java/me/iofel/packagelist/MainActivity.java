@@ -43,6 +43,23 @@ public class MainActivity extends ActionBarActivity {
             ((ImageView) v.findViewById(R.id.app_icon)).setImageDrawable(app.icon);
             return v;
         }
+
+        @Override
+        public void notifyDataSetChanged() {
+            this.setNotifyOnChange(false);
+
+            this.sort(new Comparator<AppInfo>() {
+                @Override
+                public int compare(AppInfo lhs, AppInfo rhs) {
+                    return lhs.name.compareTo(rhs.name);
+                }
+            });
+
+
+            this.setNotifyOnChange(true);
+
+            super.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -58,22 +75,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
     class PackageListLoader extends AsyncTask<Void, Integer, Void> {
-        private int lim = 0;
-
-        @Override
-        protected void onPreExecute() {
-            setProgressBarIndeterminate(false);
-            setProgressBarVisibility(true);
-        }
-
         @Override
         protected Void doInBackground(Void... params) {
             List<ApplicationInfo> applications = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-            lim = applications.size();
 
-            int i = 0;
             for (ApplicationInfo app : applications) {
-                publishProgress(++i);
                 final AppInfo info = new AppInfo();
                 info.name = app.loadLabel(getPackageManager()).toString();
                 info.pname = app.packageName;
@@ -87,24 +93,6 @@ public class MainActivity extends ActionBarActivity {
             }
 
             return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            int cur = values[0];
-            setProgress(cur / lim * 10000);
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            setProgressBarVisibility(false);
-
-            adapter.sort(new Comparator<AppInfo>() {
-                @Override
-                public int compare(AppInfo lhs, AppInfo rhs) {
-                    return lhs.name.compareTo(rhs.name);
-                }
-            });
         }
     }
 }
