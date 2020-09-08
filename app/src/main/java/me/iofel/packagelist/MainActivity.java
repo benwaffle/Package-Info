@@ -3,7 +3,6 @@ package me.iofel.packagelist;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,17 +14,16 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Comparator;
 import java.util.List;
+
+class AppInfo {
+    String name, pname;
+    Drawable icon;
+}
 
 public class MainActivity extends AppCompatActivity {
     AppInfoAdapter adapter;
     ListView lv;
-
-    class AppInfo {
-        String name, pname;
-        Drawable icon;
-    }
 
     class AppInfoAdapter extends ArrayAdapter<AppInfo> {
         public AppInfoAdapter() {
@@ -39,9 +37,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             AppInfo app = getItem(pos);
-            ((TextView) v.findViewById(R.id.app_name)).setText(app.name);
-            ((TextView) v.findViewById(R.id.app_pkg)).setText(app.pname);
-            ((ImageView) v.findViewById(R.id.app_icon)).setImageDrawable(app.icon);
+            v.<TextView>findViewById(R.id.app_name).setText(app.name);
+            v.<TextView>findViewById(R.id.app_pkg).setText(app.pname);
+            v.<ImageView>findViewById(R.id.app_icon).setImageDrawable(app.icon);
             return v;
         }
 
@@ -49,13 +47,7 @@ public class MainActivity extends AppCompatActivity {
         public void notifyDataSetChanged() {
             this.setNotifyOnChange(false);
 
-            this.sort(new Comparator<AppInfo>() {
-                @Override
-                public int compare(AppInfo lhs, AppInfo rhs) {
-                    return lhs.name.compareTo(rhs.name);
-                }
-            });
-
+            this.sort((lhs, rhs) -> lhs.name.compareTo(rhs.name));
 
             this.setNotifyOnChange(true);
 
@@ -70,14 +62,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         adapter = new AppInfoAdapter();
-        lv = (ListView) findViewById(R.id.listView);
+        lv = findViewById(R.id.listView);
         lv.setAdapter(adapter);
-        new PackageListLoader().execute();
-    }
-
-    class PackageListLoader extends AsyncTask<Void, Integer, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
+        new Thread(() -> {
             List<ApplicationInfo> applications = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
 
             for (ApplicationInfo app : applications) {
@@ -85,15 +72,10 @@ public class MainActivity extends AppCompatActivity {
                 info.name = app.loadLabel(getPackageManager()).toString();
                 info.pname = app.packageName;
                 info.icon = app.loadIcon(getPackageManager());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.add(info);
-                    }
-                });
+                runOnUiThread(() -> adapter.add(info));
             }
-
-            return null;
-        }
+        }).start();
     }
+
 }
+
