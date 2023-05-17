@@ -1,5 +1,7 @@
 package me.iofel.packagelist
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
@@ -84,6 +86,13 @@ class MainActivity : AppCompatActivity() {
         adapter = AppInfoAdapter(this, this.layoutInflater)
         val lv: ListView = findViewById(R.id.listView)
         lv.adapter = adapter
+        lv.setOnItemClickListener { parent, view, position, id ->
+            val item = adapter!!.getItem(position)
+            val clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clip.setPrimaryClip(
+                ClipData.newPlainText(item!!.name, item.pkg)
+            )
+        }
 
         Thread {
             val applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
