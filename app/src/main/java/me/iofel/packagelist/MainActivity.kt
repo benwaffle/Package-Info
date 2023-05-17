@@ -1,8 +1,6 @@
 package me.iofel.packagelist
 
-import android.app.SearchManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -16,7 +14,6 @@ import android.widget.Filterable
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 
@@ -88,10 +85,6 @@ class MainActivity : AppCompatActivity() {
         val lv: ListView = findViewById(R.id.listView)
         lv.adapter = adapter
 
-        if (intent.action == Intent.ACTION_SEARCH) {
-            Toast.makeText(this, intent.getStringExtra(SearchManager.QUERY), Toast.LENGTH_SHORT).show()
-        }
-
         Thread {
             val applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             for (app in applications) {
@@ -108,9 +101,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.toolbar, menu)
 
-        val sm = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         (menu.findItem(R.id.search).actionView as SearchView).apply {
-            setSearchableInfo(sm.getSearchableInfo(componentName))
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextChange(query: String): Boolean {
                     adapter!!.filter.filter(query)
